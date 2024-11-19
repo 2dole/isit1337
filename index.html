@@ -28,58 +28,37 @@
     <p id="clock">Fetching time...</p>
 
     <script>
-        const apiUrls = [
-            'https://worldtimeapi.org/api/ip',  // Primary API (WorldTimeAPI)
-            'https://api.ipgeolocation.io/timezone?apiKey=YOUR_API_KEY&tz=auto',  // Backup API (ipgeolocation.io)
-            'https://api.timeapi.io/api/Time/current/zone?timeZone=Etc/UTC'  // Secondary API (TimeAPI.io)
-        ];
-
-        async function fetchTimeFromApis() {
+        function fetchTimeFromBrowser() {
             const result = document.getElementById('result');
             const clock = document.getElementById('clock');
 
-            for (let apiUrl of apiUrls) {
-                try {
-                    const response = await fetch(apiUrl);
-                    if (!response.ok) throw new Error(`Error fetching from ${apiUrl}`);
-                    const data = await response.json();
+            // Get the current time using JavaScript's Date object
+            const dateTime = new Date();
 
-                    // Determine time based on the API
-                    let dateTime;
-                    if (data.date_time) {
-                        // WorldTimeAPI and TimeAPI.io
-                        dateTime = new Date(data.date_time);
-                    } else if (data.currentDateTime) {
-                        // ipgeolocation.io
-                        dateTime = new Date(data.currentDateTime);
-                    } else {
-                        throw new Error('Invalid response from API');
-                    }
+            // Format the time using Intl.DateTimeFormat
+            const timeFormatter = new Intl.DateTimeFormat('en-US', {
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit',
+                hour12: false,  // 24-hour format
+            });
 
-                    // Get the time components
-                    const hours = dateTime.getHours();
-                    const minutes = dateTime.getMinutes();
+            const formattedTime = timeFormatter.format(dateTime);
+            const [hours, minutes, seconds] = formattedTime.split(':').map(num => parseInt(num));
 
-                    // Display the current time
-                    clock.textContent = dateTime.toLocaleTimeString();
+            // Display the current time
+            clock.textContent = formattedTime;
 
-                    // Check if it is exactly 13:37
-                    if (hours === 13 && minutes === 37) {
-                        result.textContent = "Yes";
-                    } else {
-                        result.textContent = "No";
-                    }
-                    return; // Exit the function once we successfully get the time
-                } catch (error) {
-                    console.error('Error:', error);
-                    result.textContent = "Unable to determine.";
-                    clock.textContent = "Error fetching time!";
-                }
+            // Check if it is exactly 13:37
+            if (hours === 13 && minutes === 37) {
+                result.textContent = "Yes";
+            } else {
+                result.textContent = "No";
             }
         }
 
         // Update time every second
-        setInterval(fetchTimeFromApis, 1000);
+        setInterval(fetchTimeFromBrowser, 1000);
     </script>
 </body>
 </html>
