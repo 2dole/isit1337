@@ -28,39 +28,58 @@
     <p id="clock">Fetching time...</p>
 
     <script>
-        // Replace 'YOUR_API_KEY' with your actual IP Geolocation API key from ipgeolocation.io
-        const apiKey = 'YOUR_API_KEY';  
-        const apiUrl = `https://api.ipgeolocation.io/timezone?apiKey=${apiKey}&tz=auto`;
+        const apiUrls = [
+            'https://worldtimeapi.org/api/ip',  // Primary API (WorldTimeAPI)
+            'https://api.ipgeolocation.io/timezone?apiKey=YOUR_API_KEY&tz=auto',  // Backup API (ipgeolocation.io)
+            'https://api.timeapi.io/api/Time/current/zone?timeZone=Etc/UTC'  // Secondary API (TimeAPI.io)
+        ];
 
-        // Function to fetch time based on user's location using IP Geolocation API
-        async function fetchTime() {
+        async function fetchTimeFromApis() {
             const result = document.getElementById('result');
             const clock = document.getElementById('clock');
 
-            try {
-                const response = await fetch(apiUrl);
-                if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
-                const data = await response.json();
+            for (let apiUrl of apiUrls) {
+                try {
+                    const response = await fetch(apiUrl);
+                    if (!response.ok) throw new Error(`Error fetching from ${apiUrl}`);
+                    const data = await response.json();
 
-                // Get the current time from the API response
-                const dateTime = new Date(data.date_time);
-                const hours = dateTime.getHours();
-                const minutes = dateTime.getMinutes();
+                    // Determine time based on the API
+                    let dateTime;
+                    if (data.date_time) {
+                        // WorldTimeAPI and TimeAPI.io
+                        dateTime = new Date(data.date_time);
+                    } else if (data.currentDateTime) {
+                        // ipgeolocation.io
+                        dateTime = new Date(data.currentDateTime);
+                    } else {
+                        throw new Error('Invalid response from API');
+                    }
 
-                // Update the clock display
-                clock.textContent = dateTime.toLocaleTimeString();
+                    // Get the time components
+                    const hours = dateTime.getHours();
+                    const minutes = dateTime.getMinutes();
 
-                // Check if it's 13:37
-                result.textContent = (hours === 13 && minutes === 37) ? "Yes" : "No";
-            } catch (error) {
-                console.error('Error fetching time:', error);
-                clock.textContent = "Error fetching time!";
-                result.textContent = "Unable to determine.";
+                    // Display the current time
+                    clock.textContent = dateTime.toLocaleTimeString();
+
+                    // Check if it is exactly 13:37
+                    if (hours === 13 && minutes === 37) {
+                        result.textContent = "Yes";
+                    } else {
+                        result.textContent = "No";
+                    }
+                    return; // Exit the function once we successfully get the time
+                } catch (error) {
+                    console.error('Error:', error);
+                    result.textContent = "Unable to determine.";
+                    clock.textContent = "Error fetching time!";
+                }
             }
         }
 
         // Update time every second
-        setInterval(fetchTime, 1000);
+        setInterval(fetchTimeFromApis, 1000);
     </script>
 </body>
 </html>
