@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Is It 13:37?</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin-top: 20%;
+        }
+        h1 {
+            font-size: 4rem;
+        }
+        p {
+            font-size: 1.5rem;
+        }
+        #clock {
+            margin-top: 20px;
+            font-size: 2rem;
+        }
+    </style>
+</head>
+<body>
+    <h1>Is it 13:37?</h1>
+    <p id="result">Checking...</p>
+    <p id="clock">Fetching time...</p>
+
+    <script>
+        // Function to fetch time from the primary API with retry logic
+        async function fetchTimeWithRetry(retries = 3) {
+            const apiUrl = 'https://worldtimeapi.org/api/ip';
+            for (let i = 0; i < retries; i++) {
+                try {
+                    const response = await fetch(apiUrl);
+                    if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
+                    return await response.json(); // Return data if successful
+                } catch (error) {
+                    console.error(`Attempt ${i + 1} failed:`, error);
+                    if (i === retries - 1) throw error; // Throw error after all retries
+                }
+            }
+        }
+
+        // Function to fetch time from a backup API
+        async function fetchFromBackupAPI() {
+            const backupApiUrl = 'https://api.timeapi.io/api/Time/current/zone?timeZone=Etc/UTC';
+            const response = await fetch(backupApiUrl);
+            if (!response.ok) throw new Error(`Backup API error! Status: ${response.status}`);
+            const data = await response.json();
+            return { datetime: data.dateTime }; // Adjust data format to match primary API
+        }
+
+        // Main function to fetch and display time
+        async function fetchTime() {
+            const result = document.getElementById('result');
+            const clock = document.getElementById('clock');
+
+            try {
+                // Try the primary API first
+                let data;
+                try {
+                    data = await fetchTimeWithRetry();
+                } catch {
+                    console.warn('Primary API failed. Switching to backup API...');
+                    data = await fetchFromBackupAPI();
+                }
+
+                // Extract and format time
+                const dateTime = new Date(data.datetime);
+                const hours = dateTime.getHours();
+                const minutes = dateTime.getMinutes();
+
+                // Update the clock display
+                clock.textContent = dateTime.toLocaleTimeString();
+
+                // Check if it is 13:37
+                result.textContent = hours === 13 && minutes === 37 ? "Yes" : "No";
+            } catch (error) {
+                clock.textContent = "Error fetching time!";
+                result.textContent = "Unable to determine.";
+                console.error('Both APIs failed:', error);
+            }
+        }
+
+        // Update time every second
+        setInterval(fetchTime, 1000);
+    </script>
+</body>
+</html>
