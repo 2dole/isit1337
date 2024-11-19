@@ -49,8 +49,8 @@
             // Display the current time
             clock.textContent = formattedTime;
 
-            // Check if it is exactly 13:37
-            if (hours === 13 && minutes === 37) {
+            // Check if the time is between 13:37:00 and 13:37:59
+            if (hours === 13 && minutes === 37 && seconds >= 0 && seconds <= 59) {
                 result.textContent = "Yes";
             } else {
                 result.textContent = "No";
