@@ -8,7 +8,7 @@
         body {
             font-family: Arial, sans-serif;
             text-align: center;
-            margin-top: 20%;
+            margin-top: 5%;
         }
         h1 {
             font-size: 4rem;
@@ -20,9 +20,28 @@
             margin-top: 20px;
             font-size: 2rem;
         }
+        #date-container {
+            display: inline-block;
+            background-color: #f0f0f0;
+            padding: 10px;
+            border-radius: 5px;
+            margin-top: 10px;
+        }
+        #date {
+            font-size: 1rem;
+            margin: 0;
+        }
         #image {
             margin-top: 20px;
-            width: 600px; /* Adjust the width of the image */    
+            width: 300px;
+            display: block;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        #screenshot-trigger {
+            margin-top: 30px;
+            cursor: pointer;
+            width: 80px; /* Adjust the width of your custom trigger */
         }
     </style>
 </head>
@@ -31,33 +50,52 @@
     <p id="result">Checking...</p>
     <p id="clock">Fetching time...</p>
 
-<!-- External image -->
-    <img id="image" src="https://github.com/2dole/isit1337/blob/main/sweat001.gif?raw=true" alt="External Image">
+    <!-- Date inside a grey box -->
+    <div id="date-container">
+        <p id="date">Fetching date...</p>
+    </div>
 
-    
+    <!-- Image under the date -->
+    <img id="image" src="https://github.com/2dole/isit1337/blob/main/sweat001.gif?raw=true" alt="Sweat GIF">
+
+    <!-- Custom GIF to trigger screenshot -->
+    <img id="screenshot-trigger" src="https://github.com/2dole/isit1337/blob/main/screenshot-trigger.gif?raw=true" alt="Take Screenshot">
+
+    <!-- Include html2canvas Library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
     <script>
-        function fetchTimeFromBrowser() {
+        function updateDateTime() {
             const result = document.getElementById('result');
             const clock = document.getElementById('clock');
+            const date = document.getElementById('date');
 
-            // Get the current time using JavaScript's Date object
-            const dateTime = new Date();
+            // Get the current time and date using JavaScript's Date object
+            const now = new Date();
 
-            // Format the time using Intl.DateTimeFormat
+            // Format the time
             const timeFormatter = new Intl.DateTimeFormat('en-US', {
                 hour: '2-digit',
                 minute: '2-digit',
                 second: '2-digit',
-                hour12: false,  // 24-hour format
+                hour12: false,
             });
+            const formattedTime = timeFormatter.format(now);
 
-            const formattedTime = timeFormatter.format(dateTime);
-            const [hours, minutes, seconds] = formattedTime.split(':').map(num => parseInt(num));
+            // Format the date in "day/month/year" format
+            const dateFormatter = new Intl.DateTimeFormat('en-GB', {
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric',
+            });
+            const formattedDate = dateFormatter.format(now);
 
-            // Display the current time
+            // Display the current time and date
             clock.textContent = formattedTime;
+            date.textContent = formattedDate;
 
             // Check if the time is between 13:37:00 and 13:37:59
+            const [hours, minutes, seconds] = formattedTime.split(':').map(num => parseInt(num));
             if (hours === 13 && minutes === 37 && seconds >= 0 && seconds <= 59) {
                 result.textContent = "Yes";
             } else {
@@ -65,8 +103,42 @@
             }
         }
 
-        // Update time every second
-        setInterval(fetchTimeFromBrowser, 1000);
+        // Update time and date every second
+        setInterval(updateDateTime, 1000);
+
+        // Screenshot functionality
+        document.getElementById('screenshot-trigger').addEventListener('click', function () {
+            // Wait for all images and dynamic content to be fully loaded
+            const images = document.querySelectorAll('img');
+            const promises = Array.from(images).map(img => {
+                return new Promise((resolve) => {
+                    if (img.complete) {
+                        resolve();
+                    } else {
+                        img.onload = resolve;
+                        img.onerror = resolve;
+                    }
+                });
+            });
+
+            // Wait for the images and other elements to be fully loaded
+            Promise.all(promises).then(() => {
+                // Ensure the content is fully rendered
+                setTimeout(() => {
+                    // Capture the entire body element
+                    html2canvas(document.body, {
+                        useCORS: true, // Ensure cross-origin images are captured
+                        logging: true, // Debugging logs
+                    }).then(canvas => {
+                        // Convert canvas to image and trigger download
+                        const link = document.createElement('a');
+                        link.download = 'screenshot.png'; // Set the filename
+                        link.href = canvas.toDataURL(); // Convert the canvas to a data URL
+                        link.click(); // Trigger the download
+                    });
+                }, 500); // Wait an extra 500ms for rendering
+            });
+        });
     </script>
 </body>
 </html>
