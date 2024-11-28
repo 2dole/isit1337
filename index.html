@@ -20,16 +20,9 @@
             margin-top: 20px;
             font-size: 2rem;
         }
-        #date-container {
-            display: inline-block;
-            background-color: #f0f0f0;
-            padding: 10px;
-            border-radius: 5px;
-            margin-top: 10px;
-        }
         #date {
             font-size: 1rem;
-            margin: 0;
+            margin-top: 10px;
         }
         #image {
             margin-top: 20px;
@@ -50,10 +43,8 @@
     <p id="result">Checking...</p>
     <p id="clock">Fetching time...</p>
 
-    <!-- Date inside a grey box -->
-    <div id="date-container">
-        <p id="date">Fetching date...</p>
-    </div>
+    <!-- Date without the box -->
+    <p id="date">Fetching date...</p>
 
     <!-- Image under the date -->
     <img id="image" src="https://github.com/2dole/isit1337/blob/main/githubbilde_julevariant.gif?raw=true" alt="Sweat GIF">
@@ -108,7 +99,10 @@
 
         // Screenshot functionality
         document.getElementById('screenshot-trigger').addEventListener('click', function () {
-            // Wait for all images and dynamic content to be fully loaded
+            // Force update the date and clock before capturing
+            updateDateTime();
+
+            // Wait for all images to load
             const images = document.querySelectorAll('img');
             const promises = Array.from(images).map(img => {
                 return new Promise((resolve) => {
@@ -121,22 +115,23 @@
                 });
             });
 
-            // Wait for the images and other elements to be fully loaded
+            // Ensure all images and content are ready
             Promise.all(promises).then(() => {
-                // Ensure the content is fully rendered
                 setTimeout(() => {
-                    // Capture the entire body element
+                    // Capture the entire body
                     html2canvas(document.body, {
-                        useCORS: true, // Ensure cross-origin images are captured
-                        logging: true, // Debugging logs
+                        useCORS: true,
+                        logging: true,
                     }).then(canvas => {
-                        // Convert canvas to image and trigger download
+                        // Save the canvas as an image
                         const link = document.createElement('a');
-                        link.download = 'screenshot.png'; // Set the filename
-                        link.href = canvas.toDataURL(); // Convert the canvas to a data URL
-                        link.click(); // Trigger the download
+                        link.download = 'screenshot.png';
+                        link.href = canvas.toDataURL();
+                        link.click();
+                    }).catch(err => {
+                        console.error("Screenshot failed:", err);
                     });
-                }, 500); // Wait an extra 500ms for rendering
+                }, 500); // Wait an extra delay for rendering
             });
         });
     </script>
