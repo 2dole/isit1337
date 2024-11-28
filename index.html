@@ -137,3 +137,100 @@
     </script>
 </body>
 </html>
+
+
+
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Draw something</title>
+  <style>
+    /* Basic styling for the drawing area and tools */
+    #drawingCanvas {
+      border: 2px solid black;
+      margin-left: 20px;
+      margin-top: 20px;
+    }
+    #tools {
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Draw something</h1>
+
+  <!-- Drawing tools (brush/eraser) -->
+  <div id="tools">
+    <button id="brush" onclick="selectTool('brush')">Brush</button>
+    <button id="eraser" onclick="selectTool('eraser')">Eraser</button>
+  </div>
+
+  <!-- The Canvas where you will draw -->
+  <canvas id="drawingCanvas" width="500" height="400"></canvas>
+
+  <script>
+    const canvas = document.getElementById('drawingCanvas');
+    const ctx = canvas.getContext('2d');
+
+    let drawing = false;
+    let currentTool = 'brush'; // default tool is brush
+    let lastX = 0;
+    let lastY = 0;
+
+    // Set brush style
+    ctx.lineWidth = 2;
+    ctx.lineCap = 'round';
+    ctx.strokeStyle = 'black';
+
+    // Start drawing when mouse is pressed
+    canvas.addEventListener('mousedown', (e) => {
+      drawing = true;
+      [lastX, lastY] = [e.offsetX, e.offsetY];
+    });
+
+    // Stop drawing when mouse is released
+    canvas.addEventListener('mouseup', () => {
+      drawing = false;
+    });
+
+    // Draw on the canvas
+    canvas.addEventListener('mousemove', (e) => {
+      if (!drawing) return;
+
+      const [currentX, currentY] = [e.offsetX, e.offsetY];
+
+      // If the tool is brush, draw a line
+      if (currentTool === 'brush') {
+        ctx.beginPath();
+        ctx.moveTo(lastX, lastY);
+        ctx.lineTo(currentX, currentY);
+        ctx.stroke();
+      }
+      // If the tool is eraser, erase a section
+      else if (currentTool === 'eraser') {
+        ctx.clearRect(currentX - ctx.lineWidth / 2, currentY - ctx.lineWidth / 2, ctx.lineWidth, ctx.lineWidth);
+      }
+
+      // Update last position
+      [lastX, lastY] = [currentX, currentY];
+    });
+
+    // Function to switch between tools
+    function selectTool(tool) {
+      currentTool = tool;
+      if (tool === 'brush') {
+        ctx.strokeStyle = 'black';
+        ctx.lineWidth = 2;
+      } else if (tool === 'eraser') {
+        ctx.strokeStyle = 'white';
+        ctx.lineWidth = 10; // Eraser size (larger)
+      }
+    }
+
+  </script>
+</body>
+</html>
